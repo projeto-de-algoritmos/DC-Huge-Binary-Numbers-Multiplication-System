@@ -1,5 +1,8 @@
 #include "base.h"
 #include "Conversions.h"
+#include "Calculator.h"
+
+int N1I = 1, N2I = 1;
 
 MyWindow::MyWindow() 
 : m_button("Calculate!"), 
@@ -27,21 +30,29 @@ h_box3(Gtk::Orientation::HORIZONTAL)
 
   Vbox.append(m_label1);
   m_label1.set_margin(25);
+  m_label1.set_can_focus(false);
 
   Vbox.append(h_box1);
   h_box1.set_margin(10);
   h_box1.set_halign(Gtk::Align::CENTER);
 
+
   h_box1.append(b_entry1);
   b_entry1.set_width_chars(100);
-  b_entry1.signal_changed().connect(sigc::mem_fun(*this, &MyWindow::on_b1_changed));
+  b_entry1.set_can_focus(true);
+  b_entry1.signal_activate().connect(sigc::mem_fun(*this, &MyWindow::on_b1_changed));
   h_box1.append(m_label2);
+  m_label2.set_can_focus(false);
   m_label2.set_margin_start(10);
   m_label2.set_margin_end(10);
   h_box1.append(d_entry1);
   d_entry1.set_width_chars(25);
+  d_entry1.set_can_focus(true);
+  d_entry1.set_focus_on_click(true);
+  d_entry1.signal_activate().connect(sigc::mem_fun(*this, &MyWindow::on_d1_changed));
 
   Vbox.append(m_label3);
+  m_label3.set_can_focus(false);
 
   Vbox.append(h_box2);
   h_box2.set_margin(10);
@@ -49,12 +60,13 @@ h_box3(Gtk::Orientation::HORIZONTAL)
   
   h_box2.append(b_entry2);
   b_entry2.set_width_chars(100);
-  b_entry2.signal_changed().connect(sigc::mem_fun(*this, &MyWindow::on_b2_changed));
+  b_entry2.signal_activate().connect(sigc::mem_fun(*this, &MyWindow::on_b2_changed));
   h_box2.append(m_label4);
   m_label4.set_margin_start(10);
   m_label4.set_margin_end(10);
   h_box2.append(d_entry2);
   d_entry2.set_width_chars(25);
+  d_entry2.signal_activate().connect(sigc::mem_fun(*this, &MyWindow::on_d2_changed));
 
   Vbox.append(m_button);
   m_button.set_margin(10);
@@ -70,6 +82,8 @@ h_box3(Gtk::Orientation::HORIZONTAL)
 
   Vbox2.append(label_res_v);
   label_res_v.set_margin(20);
+  label_res_v.set_wrap();
+  label_res_v.set_selectable();
 
   Vbox2.append(h_box3);
   h_box3.set_margin(10);
@@ -94,16 +108,45 @@ h_box3(Gtk::Orientation::HORIZONTAL)
 
 void MyWindow::on_button_clicked(){
   std::cout << "clicou" << std::endl;
-  label_res_v.set_text("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX = xxxxxxxxx");
-  label_n_time.set_text("xxx.xxx Seconds");
-  label_k_time.set_text("xxx.xxx Seconds");
+  std::string b_num1 = b_entry1.get_text().c_str();
+  std::string b_num2 = b_entry2.get_text().c_str();
+
+  double duration_n, duration_k;
+
+  std::string res_k = karatsuba_mutliplication_ini(b_num1, b_num2, &duration_k);
+  std::string res_n = normal_mutliplication(b_num1, b_num2, &duration_n);
+  std::string res_k_d = btod(res_k);
+  std::string res_n_d = btod(res_n);
+
+  if(res_k == res_n && res_k_d == res_n_d){
+    label_res_v.set_text(res_k + " = " + res_n_d);
+  }else {
+    label_res_v.set_text("Erro! ;(");  
+    std::cout << "Dk:" << res_k_d << " Dn:" << res_n_d << std::endl;
+    std::cout << "Bk:" << res_k << " Bn:" << res_n << std::endl;
+  }
+
+  label_n_time.set_text(std::to_string(duration_n) + " Seconds");
+  label_k_time.set_text(std::to_string(duration_k) + " Seconds");
   Vbox2.set_visible(true);
 }
 
 void MyWindow::on_b1_changed(){
-  d_entry1.set_text(conv(b_entry1.get_text().c_str(), 2, 10));
+  std::string num = btod(b_entry1.get_text().c_str());
+  d_entry1.set_text(num);
 }
 
 void MyWindow::on_b2_changed(){
-  d_entry2.set_text(conv(b_entry2.get_text().c_str(), 2, 10));
+  std::string num = btod(b_entry2.get_text().c_str());
+  d_entry2.set_text(num);
+}
+
+void MyWindow::on_d1_changed(){
+  std::string num = dtob(d_entry1.get_text().c_str());
+  b_entry1.set_text(num);
+}
+
+void MyWindow::on_d2_changed(){
+  std::string num = dtob(d_entry2.get_text().c_str());
+  b_entry2.set_text(num);
 }
